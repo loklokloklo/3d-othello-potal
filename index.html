@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4×4×4立体オセロ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0c1613;
+    --bg-soft: #101d19;
+    --card: #142722;
+    --card-border: #234337;
+    --ink: #f3f0e6;
+    --ink-dim: #a9b6ae;
+    --ink-faint: #7c8b83;
+    --board: #2f8f5b;
+    --board-deep: #1f6b43;
+    --disc-w: #f4f1e6;
+    --disc-b: #17140f;
+    --gold: #e3b64a;
+    --shadow: 0 20px 45px rgba(0,0,0,0.45);
+  }
+
+  *{ box-sizing: border-box; }
+
+  html{ scroll-behavior: smooth; }
+
+  body{
+    margin: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at 15% 8%, rgba(47,143,91,0.16), transparent 45%),
+      radial-gradient(circle at 85% 90%, rgba(227,182,74,0.08), transparent 40%),
+      var(--bg);
+    color: var(--ink);
+    font-family: "Noto Sans JP", "Zen Kaku Gothic New", sans-serif;
+    padding: 56px 20px 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ---------- Header / Hero ---------- */
+
+  header{
+    width: 100%;
+    max-width: 980px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  .eyebrow{
+    font-size: 13px;
+    letter-spacing: 0.32em;
+    color: var(--board);
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+
+  h1{
+    font-family: "Zen Kaku Gothic New", sans-serif;
+    font-weight: 900;
+    font-size: clamp(32px, 6vw, 54px);
+    letter-spacing: 0.03em;
+    margin: 0 0 14px;
+    line-height: 1.25;
+  }
+
+  h1 .accent{
+    color: var(--board);
+  }
+
+  .lede{
+    color: var(--ink-dim);
+    font-size: 15px;
+    max-width: 480px;
+    line-height: 1.8;
+    margin: 0 0 34px;
+  }
+
+  /* ---------- 4x4x4 cube signature ---------- */
+
+  .hero-cube-wrap{
+    padding: 6px 0 40px;
+  }
+
+  .hero-cube-scene{
+    width: 190px;
+    height: 190px;
+    perspective: 760px;
+    margin: 0 auto;
+  }
+
+  .hero-cube-grid{
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    animation: spin3d 20s linear infinite;
+  }
+
+  .cubelet{
+    position: absolute;
+    transform-style: preserve-3d;
+  }
+
+  .cf{
+    position: absolute;
+    box-sizing: border-box;
+  }
+
+  .cf-white{
+    background: var(--disc-w);
+    border: 1px solid var(--board-deep);
+  }
+
+  .cf-black{
+    background: var(--disc-b);
+    border: 1px solid #000000;
+  }
+
+  @keyframes spin3d{
+    from{ transform: rotateX(-24deg) rotateY(0deg); }
+    to{   transform: rotateX(-24deg) rotateY(360deg); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .hero-cube-grid{ animation: none; transform: rotateX(-24deg) rotateY(30deg); }
+    html{ scroll-behavior: auto; }
+  }
+
+  /* ---------- Card grid ---------- */
+
+  main{
+    width: 100%;
+    max-width: 1080px;
+  }
+
+  .cards{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+  }
+
+  .card{
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 30px 26px 28px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
+  }
+
+  .card:hover{
+    transform: translateY(-8px);
+    box-shadow: 0 28px 60px rgba(0,0,0,0.55);
+    border-color: var(--board);
+  }
+
+  .card-icon{
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    margin-bottom: 18px;
+    background: linear-gradient(135deg, var(--disc-w) 50%, var(--disc-b) 50%);
+    border: 2px solid var(--card-border);
+    box-shadow: inset 0 0 0 2px var(--bg-soft);
+  }
+
+  .card h2{
+    font-family: "Zen Kaku Gothic New", sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 12px;
+    letter-spacing: 0.02em;
+  }
+
+  .card p{
+    color: var(--ink-dim);
+    font-size: 14.5px;
+    line-height: 1.85;
+    margin: 0 0 10px;
+  }
+
+  .card .note{
+    font-size: 12px;
+    color: var(--ink-faint);
+    line-height: 1.7;
+    margin: 0 0 10px;
+  }
+
+  .card .top-tag{
+    font-weight: 700;
+    color: var(--gold);
+  }
+
+  .card-spacer{
+    flex: 1;
+  }
+
+  .open-btn{
+    margin-top: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 13px 20px;
+    border-radius: 12px;
+    background: var(--board);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 15px;
+    text-decoration: none;
+    letter-spacing: 0.04em;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 8px 20px rgba(47,143,91,0.35);
+  }
+
+  .open-btn:hover{
+    background: var(--board-deep);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 26px rgba(47,143,91,0.45);
+  }
+
+  .open-btn:active{
+    transform: translateY(0);
+  }
+
+  .open-btn .arrow{
+    transition: transform 0.2s ease;
+  }
+
+  .open-btn:hover .arrow{
+    transform: translateX(3px);
+  }
+
+  .card--strongest{
+    border-color: rgba(227,182,74,0.45);
+  }
+
+  .card--strongest:hover{
+    border-color: var(--gold);
+  }
+
+  .card--strongest .open-btn{
+    background: var(--gold);
+    color: #201a08;
+    box-shadow: 0 8px 20px rgba(227,182,74,0.35);
+  }
+
+  .card--strongest .open-btn:hover{
+    background: #f0c766;
+    box-shadow: 0 12px 26px rgba(227,182,74,0.45);
+  }
+
+  footer{
+    margin-top: 56px;
+    color: var(--ink-faint);
+    font-size: 12.5px;
+    text-align: center;
+  }
+
+  /* ---------- Responsive ---------- */
+
+  @media (max-width: 860px){
+    .cards{
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 480px){
+    body{ padding: 44px 16px 60px; }
+    .hero-cube-scene{ transform: scale(0.7); }
+    .hero-cube-wrap{ padding: 0 0 22px; }
+    .card{ padding: 24px 20px 22px; }
+  }
+</style>
+</head>
+<body>
+
+  <header>
+    <div class="eyebrow">3D REVERSI</div>
+    <div class="hero-cube-wrap">
+      <div class="hero-cube-scene">
+        <div class="hero-cube-grid" id="heroCubeGrid"></div>
+      </div>
+    </div>
+    <h1>4<span class="accent">×</span>4<span class="accent">×</span>4立体オセロ</h1>
+    <p class="lede">縦・横・高さすべて4マスの、立体で遊ぶオセロ。あそび方に合わせてモードを選んでください。</p>
+  </header>
+
+  <main>
+    <div class="cards">
+
+      <section class="card">
+        <div class="card-icon" aria-hidden="true"></div>
+        <h2>対人版</h2>
+        <p>人対人のプレイが可能です。</p>
+        <p class="note">※オンライン対戦ではありません。同じ端末を2人で操作して対局します。</p>
+        <div class="card-spacer"></div>
+        <a class="open-btn" href="https://loklokloklo.github.io/3d-othello-inper-ver/">
+          開く <span class="arrow">→</span>
+        </a>
+      </section>
+
+      <section class="card">
+        <div class="card-icon" aria-hidden="true"></div>
+        <h2>対AI版</h2>
+        <p>AI対戦。（2.3章に登場）</p>
+        <div class="card-spacer"></div>
+        <a class="open-btn" href="https://loklokloklo.github.io/3d-othello-ai-ver/">
+          開く <span class="arrow">→</span>
+        </a>
+      </section>
+
+      <section class="card card--strongest">
+        <div class="card-icon" aria-hidden="true"></div>
+        <h2>対AI版（さっくりAI）</h2>
+        <p>AI対戦。（7章に登場）</p>
+        <p>リンク先の「さっくりAI」が該当します。</p>
+        <p class="top-tag">現行最強。</p>
+        <div class="card-spacer"></div>
+        <a class="open-btn" href="https://loklokloklo.github.io/3d-othello-aiver2/">
+          開く <span class="arrow">→</span>
+        </a>
+      </section>
+
+    </div>
+  </main>
+
+  <footer>
+    4×4×4立体オセロ &mdash; 各モードは新しいページで開きます
+  </footer>
+
+  <script>
+    (function(){
+      var GRID = 4;
+      var UNIT = 20; // 1マスのサイズ(px)
+      var HALF = UNIT / 2;
+      var positions = [];
+      for (var i = 0; i < GRID; i++){
+        positions.push((i - (GRID - 1) / 2) * UNIT);
+      }
+
+      var faceDefs = [
+        { cls: 'cf-front',  transform: 'translateZ(' + HALF + 'px)' },
+        { cls: 'cf-back',   transform: 'rotateY(180deg) translateZ(' + HALF + 'px)' },
+        { cls: 'cf-right',  transform: 'rotateY(90deg) translateZ(' + HALF + 'px)' },
+        { cls: 'cf-left',   transform: 'rotateY(-90deg) translateZ(' + HALF + 'px)' },
+        { cls: 'cf-top',    transform: 'rotateX(90deg) translateZ(' + HALF + 'px)' },
+        { cls: 'cf-bottom', transform: 'rotateX(-90deg) translateZ(' + HALF + 'px)' }
+      ];
+
+      function buildCube(){
+        var grid = document.getElementById('heroCubeGrid');
+        if (!grid) return;
+
+        positions.forEach(function(x, ix){
+          positions.forEach(function(y, iy){
+            positions.forEach(function(z, iz){
+              var cubelet = document.createElement('div');
+              cubelet.className = 'cubelet';
+              cubelet.style.width = UNIT + 'px';
+              cubelet.style.height = UNIT + 'px';
+              cubelet.style.left = '50%';
+              cubelet.style.top = '50%';
+              cubelet.style.marginLeft = (-HALF) + 'px';
+              cubelet.style.marginTop = (-HALF) + 'px';
+              cubelet.style.transform = 'translate3d(' + x + 'px, ' + y + 'px, ' + z + 'px)';
+
+              var isWhite = (ix + iy + iz) % 2 === 0;
+
+              faceDefs.forEach(function(face){
+                var el = document.createElement('div');
+                el.className = 'cf ' + face.cls + (isWhite ? ' cf-white' : ' cf-black');
+                el.style.width = UNIT + 'px';
+                el.style.height = UNIT + 'px';
+                el.style.transform = face.transform;
+                cubelet.appendChild(el);
+              });
+
+              grid.appendChild(cubelet);
+            });
+          });
+        });
+      }
+
+      buildCube();
+    })();
+  </script>
+
+</body>
+</html>
